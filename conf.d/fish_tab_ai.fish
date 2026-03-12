@@ -55,7 +55,7 @@ function _fish_tab_ai_bind --description "Activate inline ghost text key binding
     bind delete '_fish_tab_ai_clear; commandline -f delete-char; _fish_tab_ai_suggest'
 
     bind tab _fish_tab_ai_accept
-    bind right _fish_tab_ai_accept_char
+    bind right _fish_tab_ai_accept
     bind ctrl-f _fish_tab_ai_accept_char
     bind ctrl-e _fish_tab_ai_accept_all
 
