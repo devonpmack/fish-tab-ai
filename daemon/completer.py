@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from history import load_history
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
+OLLAMA_CHAT_URL = "http://localhost:11434/api/chat"
 CACHE_SIZE = 200
 CACHE_TTL = 120
 
@@ -22,7 +22,7 @@ class Completer:
         self.history = load_history()
         self.history_loaded_at = time.time()
 
-    def complete(self, buffer, cwd):
+    def complete(self, buffer, cwd, recent=None):
         """Return a completion suffix for the given buffer, or None."""
         self._reload_history_if_stale()
         self._collect_finished()
@@ -31,10 +31,18 @@ class Completer:
         if cached is not None:
             return cached
 
-        self._start_computation(buffer, cwd)
+        if not buffer:
+            # Predictive mode: compute synchronously since context changes each time
+            _, suggestion = self._compute(buffer, cwd, recent)
+            return suggestion
+
+        self._start_computation(buffer, cwd, recent=recent)
         return None
 
     def _check_cache(self, buffer):
+        if not buffer:
+            return None
+
         now = time.time()
         if buffer in self.cache:
             entry = self.cache[buffer]
@@ -67,7 +75,7 @@ class Completer:
             except Exception:
                 pass
 
-    def _start_computation(self, buffer, cwd):
+    def _start_computation(self, buffer, cwd, recent=None):
         if buffer in self.pending:
             return
         if len(self.pending) > 3:
@@ -76,13 +84,13 @@ class Completer:
             fut.cancel()
 
         self.pending[buffer] = self.executor.submit(
-            self._compute, buffer, cwd
+            self._compute, buffer, cwd, recent
         )
 
-    def _compute(self, buffer, cwd):
+    def _compute(self, buffer, cwd, recent=None):
         relevant, prefix_matches = self._get_relevant_history(buffer, cwd)
-        prompt = self._build_prompt(buffer, cwd, relevant, prefix_matches)
-        suggestion = self._query_ollama(prompt, buffer)
+        history_text = self._build_prompt(buffer, cwd, relevant, prefix_matches, recent)
+        suggestion = self._query_ollama(history_text, buffer)
         return (buffer, suggestion)
 
     def _put_cache(self, buffer, suggestion):
@@ -113,34 +121,46 @@ class Completer:
 
         return related[-limit:], prefix_matches
 
-    def _build_prompt(self, buffer, cwd, history, prefix_matches):
-        lines = [f"$ {cmd}" for cmd in history]
+    def _build_prompt(self, buffer, cwd, history, prefix_matches, recent=None):
+        history_lines = []
+        for cmd in history:
+            history_lines.append(cmd)
         if prefix_matches:
-            lines.append("")
-            lines.append("# commands matching current input:")
             for cmd in prefix_matches:
-                lines.append(f"$ {cmd}")
-            lines.append("")
-        lines.append(f"$ {buffer}")
-        return "\n".join(lines)
+                if cmd not in history_lines:
+                    history_lines.append(cmd)
+        if recent:
+            for cmd in recent:
+                if cmd not in history_lines:
+                    history_lines.append(cmd)
+        return "\n".join(history_lines)
 
-    def _query_ollama(self, prompt, buffer):
+    def _query_ollama(self, history_text, buffer):
         try:
-            data = json.dumps({
+            if buffer:
+                system = "You are a shell autocomplete. The user gives you their recent commands and a partial command. Return the full completed command. Reply with ONLY the command."
+                user_msg = f"Recent:\n{history_text}\n\nComplete: {buffer}"
+            else:
+                system = "You are a shell autocomplete. The user gives you their recent commands. Predict the most likely productive next command they will run. Reply with ONLY the command. Never suggest exit or clear."
+                user_msg = f"Recent:\n{history_text}"
+
+            payload = {
                 "model": self.model,
-                "prompt": prompt,
-                "raw": True,
+                "messages": [
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user_msg},
+                ],
                 "stream": False,
                 "options": {
                     "temperature": 0.1,
                     "num_predict": 60,
-                    "stop": ["\n", "$"],
-                    "top_p": 0.9,
+                    "stop": ["\n"],
                 },
-            }).encode()
+            }
 
+            data = json.dumps(payload).encode()
             req = urllib.request.Request(
-                OLLAMA_URL,
+                OLLAMA_CHAT_URL,
                 data=data,
                 headers={"Content-Type": "application/json"},
             )
@@ -148,21 +168,23 @@ class Completer:
             with urllib.request.urlopen(req, timeout=10) as resp:
                 result = json.loads(resp.read().decode())
 
-            text = result.get("response", "")
-            text = text.rstrip()
+            text = result.get("message", {}).get("content", "")
+            text = text.strip()
             if text.startswith("`"):
                 text = text.lstrip("`")
             if text.endswith("`"):
                 text = text.rstrip("`")
+            if text.startswith("$ "):
+                text = text[2:]
 
-            # BPE tokenization causes overlap: buffer "git comm" + model "mit"
-            # should be "git commit", not "git commMit". Strip the overlap.
-            for overlap_len in range(min(len(buffer), len(text)), 0, -1):
-                if buffer.endswith(text[:overlap_len]):
-                    text = text[overlap_len:]
-                    break
+            if buffer:
+                if not text.startswith(buffer):
+                    return None
+                text = text[len(buffer):]
 
             if len(text) < 1 or len(text) > 200:
+                return None
+            if not buffer and text.strip() in ("exit", "clear", "q", "quit"):
                 return None
             return text
 

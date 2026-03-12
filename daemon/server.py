@@ -18,6 +18,7 @@ PID_FILE = os.path.join(STATE_DIR, "daemon.pid")
 
 BUFFER_FILE = "/tmp/fish_tab_ai_buffer"
 RESULT_FILE = "/tmp/fish_tab_ai_result"
+RECENT_FILE = "/tmp/fish_tab_ai_recent"
 
 
 class FileWatcher(threading.Thread):
@@ -37,36 +38,70 @@ class FileWatcher(threading.Thread):
         self.last_buffer = ""
         self.last_handled = ""
 
+    def _read_recent(self):
+        try:
+            if os.path.exists(RECENT_FILE):
+                with open(RECENT_FILE) as f:
+                    return [l.strip() for l in f if l.strip()]
+        except Exception:
+            pass
+        return []
+
+    def _write_result(self, buffer, suggestion, fish_pid):
+        tmp = RESULT_FILE + ".tmp"
+        with open(tmp, "w") as f:
+            f.write(f"{buffer}\t{suggestion}")
+        os.rename(tmp, RESULT_FILE)
+        if fish_pid:
+            try:
+                os.kill(fish_pid, signal.SIGUSR1)
+            except (ProcessLookupError, PermissionError):
+                pass
+
     def run(self):
+        self.last_mtime = 0
+        pending_buffer = None
+        pending_cwd = ""
+        pending_pid = 0
         while True:
             try:
+                new_input = False
                 if os.path.exists(BUFFER_FILE):
-                    with open(BUFFER_FILE) as f:
-                        content = f.read().strip()
-
-                    if content:
+                    mtime = os.path.getmtime(BUFFER_FILE)
+                    if mtime != self.last_mtime:
+                        self.last_mtime = mtime
+                        new_input = True
+                        with open(BUFFER_FILE) as f:
+                            content = f.read().rstrip("\n")
+                        if not content:
+                            continue
                         parts = content.split("\t", 2)
                         buffer = parts[0]
                         cwd = parts[1] if len(parts) > 1 else ""
                         fish_pid = int(parts[2]) if len(parts) > 2 else 0
+                        recent = self._read_recent()
 
-                        if buffer != self.last_buffer:
-                            self.last_buffer = buffer
-                            self.last_handled = ""
-
-                        if buffer != self.last_handled and len(buffer) >= 2:
-                            suggestion = self.completer.complete(buffer, cwd)
+                        if len(buffer) >= 1 or (len(buffer) == 0 and recent):
+                            suggestion = self.completer.complete(
+                                buffer, cwd, recent=recent
+                            )
                             if suggestion:
-                                tmp = RESULT_FILE + ".tmp"
-                                with open(tmp, "w") as f:
-                                    f.write(f"{buffer}\t{suggestion}")
-                                os.rename(tmp, RESULT_FILE)
-                                self.last_handled = buffer
-                                if fish_pid:
-                                    try:
-                                        os.kill(fish_pid, signal.SIGUSR1)
-                                    except (ProcessLookupError, PermissionError):
-                                        pass
+                                self._write_result(buffer, suggestion, fish_pid)
+                                pending_buffer = None
+                            else:
+                                pending_buffer = buffer
+                                pending_cwd = cwd
+                                pending_pid = fish_pid
+
+                if not new_input and pending_buffer is not None:
+                    suggestion = self.completer.complete(
+                        pending_buffer, pending_cwd
+                    )
+                    if suggestion:
+                        self._write_result(
+                            pending_buffer, suggestion, pending_pid
+                        )
+                        pending_buffer = None
             except Exception:
                 pass
             time.sleep(0.05)

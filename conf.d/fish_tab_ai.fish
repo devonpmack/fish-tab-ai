@@ -73,6 +73,7 @@ function _fish_tab_ai_bind --description "Activate inline ghost text key binding
     function _fish_tab_ai_signal_handler --on-signal SIGUSR1
         _fish_tab_ai_on_result
     end
+
 end
 
 function _fish_tab_ai_unbind --description "Restore default key bindings"
@@ -111,10 +112,31 @@ function _fish_tab_ai_unbind --description "Restore default key bindings"
     functions --erase _fish_tab_ai_signal_handler 2>/dev/null
 end
 
-# Auto-activate if daemon is already running
+# Register postexec handler at top level (must be outside functions for event to fire)
+function _fish_tab_ai_postexec_handler --on-event fish_postexec
+    _fish_tab_ai_postexec $argv
+end
+
+# Auto-activate on interactive shell startup
 if status is-interactive
     if command curl -s --connect-timeout 0.05 --max-time 0.1 http://localhost:62019/health >/dev/null 2>&1
         set -g _fish_tab_ai_active 1
         _fish_tab_ai_bind
+    else
+        # Auto-start daemon if installed but not running
+        set -l _daemon_dir ~/.local/share/fish-tab-ai/daemon
+        if test -f "$_daemon_dir/server.py"
+            python3 "$_daemon_dir/server.py" 62019 "qwen2.5-coder:1.5b" &>/dev/null &
+            disown $last_pid 2>/dev/null
+            # Wait briefly for daemon to be ready
+            for _i in (seq 1 10)
+                if command curl -s --connect-timeout 0.05 --max-time 0.1 http://localhost:62019/health >/dev/null 2>&1
+                    set -g _fish_tab_ai_active 1
+                    _fish_tab_ai_bind
+                    break
+                end
+                command sleep 0.2
+            end
+        end
     end
 end

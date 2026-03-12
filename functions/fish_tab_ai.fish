@@ -54,8 +54,7 @@ function fish_tab_ai --description "Manage fish-tab-ai (start|stop|restart|statu
         case stop
             _fish_tab_ai_unbind
             set -e _fish_tab_ai_active
-            set -e _fish_tab_ai_injected
-            command rm -f /tmp/fish_tab_ai_buffer /tmp/fish_tab_ai_result /tmp/fish_tab_ai_result.tmp 2>/dev/null
+            command rm -f /tmp/fish_tab_ai_buffer /tmp/fish_tab_ai_result /tmp/fish_tab_ai_result.tmp /tmp/fish_tab_ai_ghost /tmp/fish_tab_ai_recent 2>/dev/null
 
             _fish_tab_ai_kill_daemon
 
@@ -67,8 +66,7 @@ function fish_tab_ai --description "Manage fish-tab-ai (start|stop|restart|statu
 
             _fish_tab_ai_unbind
             set -e _fish_tab_ai_active
-            set -e _fish_tab_ai_injected
-            command rm -f /tmp/fish_tab_ai_buffer /tmp/fish_tab_ai_result /tmp/fish_tab_ai_result.tmp 2>/dev/null
+            command rm -f /tmp/fish_tab_ai_buffer /tmp/fish_tab_ai_result /tmp/fish_tab_ai_result.tmp /tmp/fish_tab_ai_ghost /tmp/fish_tab_ai_recent 2>/dev/null
             _fish_tab_ai_kill_daemon
             sleep 1
 

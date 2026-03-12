@@ -20,18 +20,18 @@ if ! command -v python3 &>/dev/null; then
 fi
 
 if ! command -v ollama &>/dev/null; then
-    echo "Ollama not found. Install it:"
-    echo "  brew install ollama"
-    echo "Then re-run this script."
-    exit 1
+    echo "WARNING: Ollama not found. Install it: brew install ollama"
+    echo "Continuing anyway..."
 fi
 
 # --- Pull model if needed ---
 
 MODEL="${1:-qwen2.5-coder:1.5b}"
-if ! ollama list 2>/dev/null | grep -q "$MODEL"; then
-    echo "Pulling model $MODEL..."
-    ollama pull "$MODEL"
+if command -v ollama &>/dev/null; then
+    if ! ollama list 2>/dev/null | grep -q "$MODEL"; then
+        echo "Pulling model $MODEL..."
+        ollama pull "$MODEL"
+    fi
 fi
 
 # --- Install daemon ---
@@ -56,9 +56,16 @@ echo "Fish plugin linked into $FISH_CONFIG"
 mkdir -p ~/.local/state/fish-tab-ai
 
 echo ""
-echo "Done! Usage:"
-echo "  1. Make sure Ollama is running:  ollama serve  (or: brew services start ollama)"
-echo "  2. Start the daemon:             fish_tab_ai start"
-echo "  3. Type commands -- ghost text appears as you type"
-echo "  4. Tab to accept, Right-arrow for one char, Ctrl+E for all"
-echo "  5. Stop:                          fish_tab_ai stop"
+echo "Done! The daemon will auto-start in new Fish terminals."
+echo ""
+echo "  Manual control:"
+echo "    fish_tab_ai start    - Start daemon + activate"
+echo "    fish_tab_ai stop     - Stop daemon + deactivate"
+echo "    fish_tab_ai restart  - Restart daemon"
+echo "    fish_tab_ai status   - Check status"
+echo ""
+echo "  Usage:"
+echo "    Type commands -- ghost text appears as you type"
+echo "    Tab            Accept full suggestion"
+echo "    Right arrow    Accept one character"
+echo "    Ctrl+E         Accept full suggestion"

@@ -1,7 +1,7 @@
 function _fish_tab_ai_suggest --description "Write current buffer to daemon for AI completion"
     set -l buffer (commandline -b)
 
-    if test (string length -- "$buffer") -lt 2
+    if test (string length -- "$buffer") -lt 1
         return
     end
 
