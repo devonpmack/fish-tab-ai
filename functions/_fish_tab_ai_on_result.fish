@@ -43,6 +43,11 @@ function _fish_tab_ai_on_result --description "Handle SIGUSR1 - show dimmed inli
         return
     end
 
+    # Don't override Fish's native history suggestion if one is showing
+    if commandline --showing-suggestion
+        return
+    end
+
     set -g _fish_tab_ai_suggestion "$remaining"
     set -g _fish_tab_ai_original "$buffer"
 

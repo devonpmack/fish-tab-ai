@@ -80,8 +80,8 @@ class Completer:
         )
 
     def _compute(self, buffer, cwd):
-        relevant = self._get_relevant_history(buffer, cwd)
-        prompt = self._build_prompt(buffer, cwd, relevant)
+        relevant, prefix_matches = self._get_relevant_history(buffer, cwd)
+        prompt = self._build_prompt(buffer, cwd, relevant, prefix_matches)
         suggestion = self._query_ollama(prompt, buffer)
         return (buffer, suggestion)
 
@@ -92,25 +92,35 @@ class Completer:
 
     def _get_relevant_history(self, buffer, cwd, limit=15):
         prefix = buffer.split()[0] if buffer.strip() else ""
-        relevant = []
+        prefix_matches = []
+        related = []
 
         for cmd in reversed(self.history):
-            if len(relevant) >= limit:
-                break
-            if prefix and cmd.startswith(prefix):
-                relevant.append(cmd)
+            if cmd.startswith(buffer) and cmd != buffer:
+                if cmd not in prefix_matches and len(prefix_matches) < 5:
+                    prefix_matches.append(cmd)
+            elif prefix and cmd.startswith(prefix):
+                if cmd not in related and len(related) < limit:
+                    related.append(cmd)
             elif cwd and cwd in cmd:
-                relevant.append(cmd)
+                if cmd not in related and len(related) < limit:
+                    related.append(cmd)
 
         recent = self.history[-10:]
         for cmd in recent:
-            if cmd not in relevant:
-                relevant.append(cmd)
+            if cmd not in related and cmd not in prefix_matches:
+                related.append(cmd)
 
-        return relevant[-limit:]
+        return related[-limit:], prefix_matches
 
-    def _build_prompt(self, buffer, cwd, history):
+    def _build_prompt(self, buffer, cwd, history, prefix_matches):
         lines = [f"$ {cmd}" for cmd in history]
+        if prefix_matches:
+            lines.append("")
+            lines.append("# commands matching current input:")
+            for cmd in prefix_matches:
+                lines.append(f"$ {cmd}")
+            lines.append("")
         lines.append(f"$ {buffer}")
         return "\n".join(lines)
 

@@ -1,6 +1,5 @@
 # fish-tab-ai: AI-powered inline tab completions
-# Loaded by fish on startup. Defines bind/unbind functions only.
-# Run `fish_tab_ai start` to activate, `fish_tab_ai stop` to deactivate.
+# Auto-activates if daemon is already running, otherwise run `fish_tab_ai start`.
 
 function _fish_tab_ai_bind --description "Activate inline ghost text key bindings"
     # Each key: clear existing ghost text → insert char → check for new suggestion
@@ -110,4 +109,12 @@ function _fish_tab_ai_unbind --description "Restore default key bindings"
     bind --erase ctrl-d
 
     functions --erase _fish_tab_ai_signal_handler 2>/dev/null
+end
+
+# Auto-activate if daemon is already running
+if status is-interactive
+    if command curl -s --connect-timeout 0.05 --max-time 0.1 http://localhost:62019/health >/dev/null 2>&1
+        set -g _fish_tab_ai_active 1
+        _fish_tab_ai_bind
+    end
 end
