@@ -37,6 +37,16 @@ Open a new terminal. That's it -- Ollama, the model, and the daemon all start au
 - **Empty prompt**: predicts your next command based on what you just ran
 - **Failed commands**: tracks exit codes so it can suggest fixes
 
+## Changing the Model
+
+The default model is `qwen2.5-coder:1.5b` (~1GB, fast). To use a different model:
+
+```fish
+fish_tab_ai restart qwen2.5-coder:7b
+```
+
+Any Ollama model works. Larger models give better suggestions but are slower.
+
 ## Commands
 
 ```fish
