@@ -1,0 +1,113 @@
+# fish-tab-ai: AI-powered inline tab completions
+# Loaded by fish on startup. Defines bind/unbind functions only.
+# Run `fish_tab_ai start` to activate, `fish_tab_ai stop` to deactivate.
+
+function _fish_tab_ai_bind --description "Activate inline ghost text key bindings"
+    # Each key: clear existing suggestion → insert char → check for new suggestion
+    set -l cmd_prefix '_fish_tab_ai_clear; commandline -i'
+    set -l cmd_suffix '; _fish_tab_ai_suggest'
+
+    for c in a b c d e f g h i j k l m n o p q r s t u v w x y z
+        bind $c "$cmd_prefix $c$cmd_suffix"
+    end
+    for c in A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+        bind $c "$cmd_prefix $c$cmd_suffix"
+    end
+    for c in 0 1 2 3 4 5 6 7 8 9
+        bind $c "$cmd_prefix $c$cmd_suffix"
+    end
+
+    bind '.' "$cmd_prefix '.'$cmd_suffix"
+    bind '/' "$cmd_prefix '/'$cmd_suffix"
+    bind '_' "$cmd_prefix '_'$cmd_suffix"
+    bind '=' "$cmd_prefix '='$cmd_suffix"
+    bind '+' "$cmd_prefix '+'$cmd_suffix"
+    bind '~' "$cmd_prefix '~'$cmd_suffix"
+    bind '!' "$cmd_prefix '!'$cmd_suffix"
+    bind '@' "$cmd_prefix '@'$cmd_suffix"
+    bind '#' "$cmd_prefix '#'$cmd_suffix"
+    bind '%' "$cmd_prefix '%'$cmd_suffix"
+    bind '^' "$cmd_prefix '^'$cmd_suffix"
+    bind '&' "$cmd_prefix '&'$cmd_suffix"
+    bind '*' "$cmd_prefix '*'$cmd_suffix"
+    bind '(' "$cmd_prefix '('$cmd_suffix"
+    bind ')' "$cmd_prefix ')'$cmd_suffix"
+    bind '[' "$cmd_prefix '['$cmd_suffix"
+    bind ']' "$cmd_prefix ']'$cmd_suffix"
+    bind '{' "$cmd_prefix '{'$cmd_suffix"
+    bind '}' "$cmd_prefix '}'$cmd_suffix"
+    bind '|' "$cmd_prefix '|'$cmd_suffix"
+    bind ':' "$cmd_prefix ':'$cmd_suffix"
+    bind ';' "$cmd_prefix ';'$cmd_suffix"
+    bind '<' "$cmd_prefix '<'$cmd_suffix"
+    bind '>' "$cmd_prefix '>'$cmd_suffix"
+    bind '?' "$cmd_prefix '?'$cmd_suffix"
+    bind '`' "$cmd_prefix '`'$cmd_suffix"
+
+    bind space "$cmd_prefix ' '$cmd_suffix"
+    bind minus "$cmd_prefix '-'$cmd_suffix"
+    bind comma "$cmd_prefix ','$cmd_suffix"
+    bind '"' "$cmd_prefix '\"'$cmd_suffix"
+    bind "'" "$cmd_prefix \"'\"$cmd_suffix"
+    bind '$' "$cmd_prefix '\$'$cmd_suffix"
+    bind '\\' "$cmd_prefix '\\\\'$cmd_suffix"
+
+    bind backspace '_fish_tab_ai_clear; commandline -f backward-delete-char; _fish_tab_ai_suggest'
+    bind delete '_fish_tab_ai_clear; commandline -f delete-char; _fish_tab_ai_suggest'
+
+    bind tab _fish_tab_ai_accept
+    bind right _fish_tab_ai_accept_char
+    bind ctrl-f _fish_tab_ai_accept_char
+    bind ctrl-e _fish_tab_ai_accept_all
+
+    bind enter '_fish_tab_ai_clear; commandline -f execute'
+    bind up '_fish_tab_ai_clear; commandline -f up-or-search'
+    bind down '_fish_tab_ai_clear; commandline -f down-or-search'
+    bind left '_fish_tab_ai_clear; commandline -f backward-char'
+    bind ctrl-a '_fish_tab_ai_clear; commandline -f beginning-of-line'
+    bind ctrl-k '_fish_tab_ai_clear; commandline -f kill-line'
+    bind ctrl-u '_fish_tab_ai_clear; commandline -f backward-kill-line'
+    bind ctrl-w '_fish_tab_ai_clear; commandline -f backward-kill-word'
+    bind ctrl-c '_fish_tab_ai_clear; commandline -f cancel-commandline'
+    bind ctrl-d '_fish_tab_ai_clear; commandline -f delete-or-exit'
+
+    function _fish_tab_ai_signal_handler --on-signal SIGUSR1
+        _fish_tab_ai_on_result
+    end
+end
+
+function _fish_tab_ai_unbind --description "Restore default key bindings"
+    for c in a b c d e f g h i j k l m n o p q r s t u v w x y z \
+             A B C D E F G H I J K L M N O P Q R S T U V W X Y Z \
+             0 1 2 3 4 5 6 7 8 9
+        bind --erase $c
+    end
+    for c in '.' '/' '_' '=' '+' '~' '!' '@' '#' '$' '%' '^' '&' '*' \
+             '(' ')' '[' ']' '{' '}' '|' ':' ';' '<' '>' '?' '`' '\\'
+        bind --erase -- $c
+    end
+    bind --erase space
+    bind --erase minus
+    bind --erase comma
+    bind --erase '"'
+    bind --erase "'"
+    bind --erase '$'
+    bind --erase backspace
+    bind --erase delete
+    bind --erase tab
+    bind --erase right
+    bind --erase ctrl-f
+    bind --erase ctrl-e
+    bind --erase enter
+    bind --erase up
+    bind --erase down
+    bind --erase left
+    bind --erase ctrl-a
+    bind --erase ctrl-k
+    bind --erase ctrl-u
+    bind --erase ctrl-w
+    bind --erase ctrl-c
+    bind --erase ctrl-d
+
+    functions --erase _fish_tab_ai_signal_handler 2>/dev/null
+end
