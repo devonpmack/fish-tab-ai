@@ -1,18 +1,5 @@
-function _fish_tab_ai_on_result --description "Handle SIGUSR1 from daemon - show inline suggestion"
+function _fish_tab_ai_on_result --description "Handle SIGUSR1 - show inline suggestion"
     if not set -q _fish_tab_ai_active
-        return
-    end
-
-    set -l buffer (commandline -b)
-
-    # If suggestion is already showing, use the original buffer
-    if set -q _fish_tab_ai_original
-        set buffer "$_fish_tab_ai_original"
-    end
-
-    set -l buf_len (string length -- "$buffer")
-
-    if test $buf_len -lt 2
         return
     end
 
@@ -39,14 +26,33 @@ function _fish_tab_ai_on_result --description "Handle SIGUSR1 from daemon - show
     set -g _fish_tab_ai_cache_buf "$orig_buf"
     set -g _fish_tab_ai_cache_sug "$suggestion"
 
-    set -l full "$orig_buf$suggestion"
-    if string match -q "$buffer*" -- "$full"
-        set -l remaining (string sub -s (math $buf_len + 1) -- "$full")
-        if test -n "$remaining"
-            set -g _fish_tab_ai_suggestion "$remaining"
-            set -g _fish_tab_ai_original "$buffer"
-            commandline -r -- "$buffer$remaining"
-            commandline -C $buf_len
-        end
+    # Get actual user buffer (strip existing suggestion if showing)
+    set -l buffer (commandline -b)
+    if set -q _fish_tab_ai_original
+        set buffer "$_fish_tab_ai_original"
     end
+
+    set -l buf_len (string length -- "$buffer")
+    if test $buf_len -lt 2
+        return
+    end
+
+    set -l full "$orig_buf$suggestion"
+    if not string match -q "$buffer*" -- "$full"
+        return
+    end
+
+    if test "$full" = "$buffer"
+        return
+    end
+
+    set -l remaining (string sub -s (math $buf_len + 1) -- "$full")
+    if test -z "$remaining"
+        return
+    end
+
+    set -g _fish_tab_ai_suggestion "$remaining"
+    set -g _fish_tab_ai_original "$buffer"
+    commandline -r -- "$buffer$remaining"
+    commandline -C $buf_len
 end

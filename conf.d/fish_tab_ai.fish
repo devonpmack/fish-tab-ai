@@ -3,54 +3,54 @@
 # Run `fish_tab_ai start` to activate, `fish_tab_ai stop` to deactivate.
 
 function _fish_tab_ai_bind --description "Activate inline ghost text key bindings"
-    # Each key: clear existing suggestion → insert char → check for new suggestion
-    set -l cmd_prefix '_fish_tab_ai_clear; commandline -i'
-    set -l cmd_suffix '; _fish_tab_ai_suggest'
+    # Each key: clear existing ghost text → insert char → check for new suggestion
+    set -l prefix '_fish_tab_ai_clear; commandline -i'
+    set -l suffix '; _fish_tab_ai_suggest'
 
     for c in a b c d e f g h i j k l m n o p q r s t u v w x y z
-        bind $c "$cmd_prefix $c$cmd_suffix"
+        bind $c "$prefix $c$suffix"
     end
     for c in A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
-        bind $c "$cmd_prefix $c$cmd_suffix"
+        bind $c "$prefix $c$suffix"
     end
     for c in 0 1 2 3 4 5 6 7 8 9
-        bind $c "$cmd_prefix $c$cmd_suffix"
+        bind $c "$prefix $c$suffix"
     end
 
-    bind '.' "$cmd_prefix '.'$cmd_suffix"
-    bind '/' "$cmd_prefix '/'$cmd_suffix"
-    bind '_' "$cmd_prefix '_'$cmd_suffix"
-    bind '=' "$cmd_prefix '='$cmd_suffix"
-    bind '+' "$cmd_prefix '+'$cmd_suffix"
-    bind '~' "$cmd_prefix '~'$cmd_suffix"
-    bind '!' "$cmd_prefix '!'$cmd_suffix"
-    bind '@' "$cmd_prefix '@'$cmd_suffix"
-    bind '#' "$cmd_prefix '#'$cmd_suffix"
-    bind '%' "$cmd_prefix '%'$cmd_suffix"
-    bind '^' "$cmd_prefix '^'$cmd_suffix"
-    bind '&' "$cmd_prefix '&'$cmd_suffix"
-    bind '*' "$cmd_prefix '*'$cmd_suffix"
-    bind '(' "$cmd_prefix '('$cmd_suffix"
-    bind ')' "$cmd_prefix ')'$cmd_suffix"
-    bind '[' "$cmd_prefix '['$cmd_suffix"
-    bind ']' "$cmd_prefix ']'$cmd_suffix"
-    bind '{' "$cmd_prefix '{'$cmd_suffix"
-    bind '}' "$cmd_prefix '}'$cmd_suffix"
-    bind '|' "$cmd_prefix '|'$cmd_suffix"
-    bind ':' "$cmd_prefix ':'$cmd_suffix"
-    bind ';' "$cmd_prefix ';'$cmd_suffix"
-    bind '<' "$cmd_prefix '<'$cmd_suffix"
-    bind '>' "$cmd_prefix '>'$cmd_suffix"
-    bind '?' "$cmd_prefix '?'$cmd_suffix"
-    bind '`' "$cmd_prefix '`'$cmd_suffix"
+    bind '.' "$prefix '.'$suffix"
+    bind '/' "$prefix '/'$suffix"
+    bind '_' "$prefix '_'$suffix"
+    bind '=' "$prefix '='$suffix"
+    bind '+' "$prefix '+'$suffix"
+    bind '~' "$prefix '~'$suffix"
+    bind '!' "$prefix '!'$suffix"
+    bind '@' "$prefix '@'$suffix"
+    bind '#' "$prefix '#'$suffix"
+    bind '%' "$prefix '%'$suffix"
+    bind '^' "$prefix '^'$suffix"
+    bind '&' "$prefix '&'$suffix"
+    bind '*' "$prefix '*'$suffix"
+    bind '(' "$prefix '('$suffix"
+    bind ')' "$prefix ')'$suffix"
+    bind '[' "$prefix '['$suffix"
+    bind ']' "$prefix ']'$suffix"
+    bind '{' "$prefix '{'$suffix"
+    bind '}' "$prefix '}'$suffix"
+    bind '|' "$prefix '|'$suffix"
+    bind ':' "$prefix ':'$suffix"
+    bind ';' "$prefix ';'$suffix"
+    bind '<' "$prefix '<'$suffix"
+    bind '>' "$prefix '>'$suffix"
+    bind '?' "$prefix '?'$suffix"
+    bind '`' "$prefix '`'$suffix"
 
-    bind space "$cmd_prefix ' '$cmd_suffix"
-    bind minus "$cmd_prefix '-'$cmd_suffix"
-    bind comma "$cmd_prefix ','$cmd_suffix"
-    bind '"' "$cmd_prefix '\"'$cmd_suffix"
-    bind "'" "$cmd_prefix \"'\"$cmd_suffix"
-    bind '$' "$cmd_prefix '\$'$cmd_suffix"
-    bind '\\' "$cmd_prefix '\\\\'$cmd_suffix"
+    bind space "$prefix ' '$suffix"
+    bind minus "$prefix '-'$suffix"
+    bind comma "$prefix ','$suffix"
+    bind '"' "$prefix '\"'$suffix"
+    bind "'" "$prefix \"'\"$suffix"
+    bind '$' "$prefix '\$'$suffix"
+    bind '\\' "$prefix '\\\\'$suffix"
 
     bind backspace '_fish_tab_ai_clear; commandline -f backward-delete-char; _fish_tab_ai_suggest'
     bind delete '_fish_tab_ai_clear; commandline -f delete-char; _fish_tab_ai_suggest'
