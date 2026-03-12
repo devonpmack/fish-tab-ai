@@ -162,15 +162,20 @@ if status is-interactive
             command sleep 1
         end
 
+        set -l _model "qwen2.5-coder:1.5b"
+        if set -q fish_tab_ai_model
+            set _model $fish_tab_ai_model
+        end
+
         # Pull model if needed
         if command -v ollama >/dev/null 2>&1
-            if not ollama list 2>/dev/null | string match -q "*qwen2.5-coder*"
-                ollama pull qwen2.5-coder:1.5b &>/dev/null &
+            if not ollama list 2>/dev/null | string match -q "*$_model*"
+                ollama pull $_model &>/dev/null &
                 disown $last_pid 2>/dev/null
             end
         end
 
-        python3 "$_daemon_dir/server.py" 62019 "qwen2.5-coder:1.5b" &>/dev/null &
+        python3 "$_daemon_dir/server.py" 62019 "$_model" &>/dev/null &
         disown $last_pid 2>/dev/null
         for _i in (seq 1 10)
             if command curl -s --connect-timeout 0.05 --max-time 0.1 http://localhost:62019/health >/dev/null 2>&1

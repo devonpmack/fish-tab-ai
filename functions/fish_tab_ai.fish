@@ -14,7 +14,10 @@ function fish_tab_ai --description "Manage fish-tab-ai (start|stop|restart|statu
             set -l model "qwen2.5-coder:1.5b"
             if set -q argv[2]
                 set model $argv[2]
+            else if set -q fish_tab_ai_model
+                set model $fish_tab_ai_model
             end
+            set -U fish_tab_ai_model $model
 
             if _fish_tab_ai_daemon_alive
                 echo "fish-tab-ai daemon already running"
@@ -70,7 +73,10 @@ function fish_tab_ai --description "Manage fish-tab-ai (start|stop|restart|statu
             set -l model "qwen2.5-coder:1.5b"
             if set -q argv[2]
                 set model $argv[2]
+            else if set -q fish_tab_ai_model
+                set model $fish_tab_ai_model
             end
+            set -U fish_tab_ai_model $model
 
             _fish_tab_ai_unbind
             set -e _fish_tab_ai_active
