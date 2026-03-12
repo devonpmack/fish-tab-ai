@@ -4,23 +4,23 @@ Cursor tab style AI-powered inline completions for [Fish shell](https://fishshel
 
 ## Install
 
-### With Fisher (recommended)
-
-```fish
-brew install ollama
-fisher install devonpmack/fish-tab-ai
-```
-
-### Manual
-
 ```bash
 brew install ollama
+ollama pull qwen2.5-coder:1.5b
 git clone https://github.com/devonpmack/fish-tab-ai.git
 cd fish-tab-ai
 bash install.sh
 ```
 
-Open a new terminal. That's it -- Ollama, the model, and the daemon all start automatically.
+Open a new terminal. That's it -- Ollama and the daemon start automatically.
+
+### With Fisher
+
+```fish
+brew install ollama
+ollama pull qwen2.5-coder:1.5b
+fisher install devonpmack/fish-tab-ai
+```
 
 ## Keys
 
