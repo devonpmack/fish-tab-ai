@@ -1,4 +1,4 @@
-function _fish_tab_ai_on_result --description "Handle SIGUSR1 - show inline suggestion"
+function _fish_tab_ai_on_result --description "Handle SIGUSR1 - show dimmed inline suggestion"
     if not set -q _fish_tab_ai_active
         return
     end
@@ -26,23 +26,15 @@ function _fish_tab_ai_on_result --description "Handle SIGUSR1 - show inline sugg
     set -g _fish_tab_ai_cache_buf "$orig_buf"
     set -g _fish_tab_ai_cache_sug "$suggestion"
 
-    # Get actual user buffer (strip existing suggestion if showing)
     set -l buffer (commandline -b)
-    if set -q _fish_tab_ai_original
-        set buffer "$_fish_tab_ai_original"
-    end
-
     set -l buf_len (string length -- "$buffer")
+
     if test $buf_len -lt 2
         return
     end
 
     set -l full "$orig_buf$suggestion"
     if not string match -q "$buffer*" -- "$full"
-        return
-    end
-
-    if test "$full" = "$buffer"
         return
     end
 
@@ -53,6 +45,7 @@ function _fish_tab_ai_on_result --description "Handle SIGUSR1 - show inline sugg
 
     set -g _fish_tab_ai_suggestion "$remaining"
     set -g _fish_tab_ai_original "$buffer"
-    commandline -r -- "$buffer$remaining"
-    commandline -C $buf_len
+
+    # Print dimmed ghost text directly (Fish is idle, no pending redraw)
+    printf '\e7\e[90m%s\e[0m\e8' "$remaining"
 end

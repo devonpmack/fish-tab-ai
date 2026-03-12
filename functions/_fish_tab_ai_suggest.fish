@@ -11,7 +11,7 @@ function _fish_tab_ai_suggest --description "Check cache for suggestion + write 
 
     set -l buf_len (string length -- "$buffer")
 
-    # Client-side prefix cache: if daemon already returned a longer suggestion, extend it
+    # Client-side prefix cache
     if set -q _fish_tab_ai_cache_buf; and set -q _fish_tab_ai_cache_sug
         set -l full "$_fish_tab_ai_cache_buf$_fish_tab_ai_cache_sug"
         set -l cache_len (string length -- "$_fish_tab_ai_cache_buf")
@@ -20,8 +20,10 @@ function _fish_tab_ai_suggest --description "Check cache for suggestion + write 
             if test -n "$remaining"
                 set -g _fish_tab_ai_suggestion "$remaining"
                 set -g _fish_tab_ai_original "$buffer"
-                commandline -r -- "$buffer$remaining"
-                commandline -C $buf_len
+                # Schedule dimmed ghost text after Fish redraws (~15ms)
+                printf '%s' "$remaining" > /tmp/fish_tab_ai_ghost
+                command sh -c 'sleep 0.015; g=$(cat /tmp/fish_tab_ai_ghost 2>/dev/null); [ -n "$g" ] && printf "\0337\033[90m%s\033[0m\0338" "$g" > /dev/tty' &
+                disown $last_pid 2>/dev/null
             end
         end
     end
