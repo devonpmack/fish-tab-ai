@@ -39,13 +39,21 @@ Open a new terminal. That's it -- Ollama, the model, and the daemon all start au
 
 ## Changing the Model
 
-The default model is `qwen2.5-coder:1.5b` (~1GB, fast). To use a different model:
+The default model is `qwen2.5-coder:1.5b`. To switch:
 
 ```fish
-fish_tab_ai restart qwen2.5-coder:7b
+fish_tab_ai restart <model>
 ```
 
-Any Ollama model works. Larger models give better suggestions but are slower.
+| Model | Size | Speed | Quality |
+|-------|------|-------|---------|
+| `qwen2.5-coder:1.5b` | ~1 GB | Fastest | Good for common commands |
+| `qwen2.5-coder:3b` | ~2 GB | Fast | Better context understanding |
+| `qwen2.5-coder:7b` | ~4 GB | Moderate | Best suggestions |
+| `codellama:7b` | ~4 GB | Moderate | Good for general coding |
+| `deepseek-coder-v2:lite` | ~9 GB | Slower | High quality completions |
+
+Any [Ollama model](https://ollama.com/library) works -- it will be pulled automatically on first use.
 
 ## Commands
 
