@@ -117,31 +117,68 @@ function _fish_tab_ai_postexec_handler --on-event fish_postexec
     _fish_tab_ai_postexec $argv
 end
 
+# Auto-install daemon if missing (supports Fisher install)
+function _fish_tab_ai_ensure_daemon
+    set -l daemon_dir ~/.local/share/fish-tab-ai/daemon
+    if test -f "$daemon_dir/server.py"
+        return 0
+    end
+
+    # Find source daemon dir relative to this conf.d file
+    set -l conf_dir (status dirname)
+    set -l source_dir "$conf_dir/../daemon"
+    if not test -d "$source_dir"
+        # Fisher stores repos in ~/.local/share/fisher or data dir
+        for d in (find ~/.local/share/fish/vendor_conf.d/.. -name daemon -path "*/fish-tab-ai/*" 2>/dev/null) \
+                 (find ~/.config/fish/.. -name daemon -path "*/fish-tab-ai/*" 2>/dev/null)
+            if test -f "$d/server.py"
+                set source_dir "$d"
+                break
+            end
+        end
+    end
+
+    if test -f "$source_dir/server.py"
+        mkdir -p (dirname "$daemon_dir")
+        cp -r "$source_dir" "$daemon_dir"
+        mkdir -p ~/.local/state/fish-tab-ai
+        return 0
+    end
+    return 1
+end
+
 # Auto-activate on interactive shell startup
 if status is-interactive
     if command curl -s --connect-timeout 0.05 --max-time 0.1 http://localhost:62019/health >/dev/null 2>&1
         set -g _fish_tab_ai_active 1
         _fish_tab_ai_bind
-    else
+    else if _fish_tab_ai_ensure_daemon
         set -l _daemon_dir ~/.local/share/fish-tab-ai/daemon
-        if test -f "$_daemon_dir/server.py"
-            # Start Ollama if not running
-            if not command curl -s --connect-timeout 0.1 --max-time 0.2 http://localhost:11434/api/tags >/dev/null 2>&1
-                command ollama serve &>/dev/null &
-                disown $last_pid 2>/dev/null
-                command sleep 1
-            end
 
-            python3 "$_daemon_dir/server.py" 62019 "qwen2.5-coder:1.5b" &>/dev/null &
+        # Start Ollama if not running
+        if not command curl -s --connect-timeout 0.1 --max-time 0.2 http://localhost:11434/api/tags >/dev/null 2>&1
+            command ollama serve &>/dev/null &
             disown $last_pid 2>/dev/null
-            for _i in (seq 1 10)
-                if command curl -s --connect-timeout 0.05 --max-time 0.1 http://localhost:62019/health >/dev/null 2>&1
-                    set -g _fish_tab_ai_active 1
-                    _fish_tab_ai_bind
-                    break
-                end
-                command sleep 0.2
+            command sleep 1
+        end
+
+        # Pull model if needed
+        if command -v ollama >/dev/null 2>&1
+            if not ollama list 2>/dev/null | string match -q "*qwen2.5-coder*"
+                ollama pull qwen2.5-coder:1.5b &>/dev/null &
+                disown $last_pid 2>/dev/null
             end
+        end
+
+        python3 "$_daemon_dir/server.py" 62019 "qwen2.5-coder:1.5b" &>/dev/null &
+        disown $last_pid 2>/dev/null
+        for _i in (seq 1 10)
+            if command curl -s --connect-timeout 0.05 --max-time 0.1 http://localhost:62019/health >/dev/null 2>&1
+                set -g _fish_tab_ai_active 1
+                _fish_tab_ai_bind
+                break
+            end
+            command sleep 0.2
         end
     end
 end
