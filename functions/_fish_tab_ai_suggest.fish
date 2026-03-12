@@ -20,9 +20,11 @@ function _fish_tab_ai_suggest --description "Check cache for suggestion + write 
             if test -n "$remaining"
                 set -g _fish_tab_ai_suggestion "$remaining"
                 set -g _fish_tab_ai_original "$buffer"
+                # Suppress Fish's native autosuggestion so it doesn't overlap
+                commandline -f suppress-autosuggestion
                 # Schedule dimmed ghost text after Fish redraws (~15ms)
                 printf '%s' "$remaining" > /tmp/fish_tab_ai_ghost
-                command sh -c 'sleep 0.015; g=$(cat /tmp/fish_tab_ai_ghost 2>/dev/null); [ -n "$g" ] && printf "\0337\033[90m%s\033[0m\0338" "$g" > /dev/tty' &
+                command sh -c 'sleep 0.015; g=$(cat /tmp/fish_tab_ai_ghost 2>/dev/null); [ -n "$g" ] && printf "\0337\033[K\033[90m%s\033[0m\0338" "$g" > /dev/tty' &
                 disown $last_pid 2>/dev/null
             end
         end

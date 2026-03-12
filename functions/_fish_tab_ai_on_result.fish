@@ -46,6 +46,8 @@ function _fish_tab_ai_on_result --description "Handle SIGUSR1 - show dimmed inli
     set -g _fish_tab_ai_suggestion "$remaining"
     set -g _fish_tab_ai_original "$buffer"
 
-    # Print dimmed ghost text directly (Fish is idle, no pending redraw)
-    printf '\e7\e[90m%s\e[0m\e8' "$remaining"
+    commandline -f suppress-autosuggestion
+
+    # Clear Fish's native autosuggestion from display, then print our dimmed ghost text
+    printf '\e7\e[K\e[90m%s\e[0m\e8' "$remaining"
 end
