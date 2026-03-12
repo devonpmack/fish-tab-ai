@@ -43,7 +43,7 @@ function _fish_tab_ai_bind --description "Activate inline ghost text key binding
     bind '?' "$prefix '?'$suffix"
     bind '`' "$prefix '`'$suffix"
 
-    bind space "$prefix ' '$suffix"
+    bind space '_fish_tab_ai_clear; commandline -f expand-abbr; commandline -i " "; _fish_tab_ai_suggest'
     bind minus "$prefix '-'$suffix"
     bind comma "$prefix ','$suffix"
     bind '"' "$prefix '\"'$suffix"
@@ -59,7 +59,7 @@ function _fish_tab_ai_bind --description "Activate inline ghost text key binding
     bind ctrl-f _fish_tab_ai_accept_char
     bind ctrl-e _fish_tab_ai_accept_all
 
-    bind enter '_fish_tab_ai_clear; commandline -f execute'
+    bind enter '_fish_tab_ai_clear; commandline -f expand-abbr execute'
     bind up '_fish_tab_ai_clear; up-or-search'
     bind down '_fish_tab_ai_clear; down-or-search'
     bind left '_fish_tab_ai_clear; commandline -f backward-char'
