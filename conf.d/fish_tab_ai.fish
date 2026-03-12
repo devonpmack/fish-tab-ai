@@ -60,8 +60,8 @@ function _fish_tab_ai_bind --description "Activate inline ghost text key binding
     bind ctrl-e _fish_tab_ai_accept_all
 
     bind enter '_fish_tab_ai_clear; commandline -f execute'
-    bind up '_fish_tab_ai_clear; commandline -f up-or-search'
-    bind down '_fish_tab_ai_clear; commandline -f down-or-search'
+    bind up '_fish_tab_ai_clear; up-or-search'
+    bind down '_fish_tab_ai_clear; down-or-search'
     bind left '_fish_tab_ai_clear; commandline -f backward-char'
     bind ctrl-a '_fish_tab_ai_clear; commandline -f beginning-of-line'
     bind ctrl-k '_fish_tab_ai_clear; commandline -f kill-line'
