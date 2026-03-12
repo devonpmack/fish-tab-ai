@@ -32,6 +32,14 @@ function fish_tab_ai --description "Manage fish-tab-ai (start|stop|restart|statu
                 return 1
             end
 
+            # Start Ollama if not running
+            if not command curl -s --connect-timeout 0.1 --max-time 0.2 http://localhost:11434/api/tags >/dev/null 2>&1
+                echo "Starting Ollama..."
+                command ollama serve &>/dev/null &
+                disown $last_pid 2>/dev/null
+                sleep 2
+            end
+
             echo "Starting daemon (model: $model)..."
             python3 "$daemon_dir/server.py" $port $model &
             disown $last_pid

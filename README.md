@@ -6,13 +6,12 @@ Cursor tab style AI-powered inline completions for [Fish shell](https://fishshel
 
 ```bash
 brew install ollama
-ollama serve &
 git clone https://github.com/devonpmack/fish-tab-ai.git
 cd fish-tab-ai
 bash install.sh
 ```
 
-Open a new terminal. That's it -- suggestions appear as you type.
+Open a new terminal. That's it -- Ollama and the daemon start automatically.
 
 ## Keys
 
@@ -59,7 +58,7 @@ fish_tab_ai restart       # Try restarting
 
 # Slow suggestions?
 # The default model (qwen2.5-coder:1.5b) is optimized for speed.
-# Make sure Ollama is running: ollama serve
+# Ollama starts automatically, but you can check: ollama list
 ```
 
 ## Uninstall

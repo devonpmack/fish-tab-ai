@@ -123,12 +123,17 @@ if status is-interactive
         set -g _fish_tab_ai_active 1
         _fish_tab_ai_bind
     else
-        # Auto-start daemon if installed but not running
         set -l _daemon_dir ~/.local/share/fish-tab-ai/daemon
         if test -f "$_daemon_dir/server.py"
+            # Start Ollama if not running
+            if not command curl -s --connect-timeout 0.1 --max-time 0.2 http://localhost:11434/api/tags >/dev/null 2>&1
+                command ollama serve &>/dev/null &
+                disown $last_pid 2>/dev/null
+                command sleep 1
+            end
+
             python3 "$_daemon_dir/server.py" 62019 "qwen2.5-coder:1.5b" &>/dev/null &
             disown $last_pid 2>/dev/null
-            # Wait briefly for daemon to be ready
             for _i in (seq 1 10)
                 if command curl -s --connect-timeout 0.05 --max-time 0.1 http://localhost:62019/health >/dev/null 2>&1
                     set -g _fish_tab_ai_active 1
